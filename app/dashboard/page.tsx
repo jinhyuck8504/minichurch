@@ -55,7 +55,7 @@ export default function DashboardPage() {
         series_name: formData.get('series'),
         youtube_url: formData.get('youtube'),
         summary: formData.get('summary'),
-        church_id: '00000000-0000-0000-0000-000000000000' // 임시 교회 ID
+        church_id: '00000000-0000-0000-0000-000000000000'
       }])
     
     if (error) {
@@ -63,7 +63,6 @@ export default function DashboardPage() {
     } else {
       alert('설교가 추가되었습니다!')
       setShowSermonForm(false)
-      // 목록 새로고침
       window.location.reload()
     }
   }
@@ -78,7 +77,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 헤더 */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
@@ -96,11 +94,8 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* 메인 콘텐츠 */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          
-          {/* 설교 관리 섹션 */}
           <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
             <div className="px-4 py-5 sm:p-6">
               <div className="flex justify-between items-center mb-4">
@@ -115,7 +110,6 @@ export default function DashboardPage() {
                 </button>
               </div>
 
-              {/* 설교 추가 폼 */}
               {showSermonForm && (
                 <div className="mb-6 p-4 border border-gray-200 rounded-lg">
                   <form onSubmit={handleAddSermon} className="space-y-4">
@@ -199,7 +193,6 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {/* 설교 목록 */}
               <div className="space-y-3">
                 {sermons.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">
@@ -236,7 +229,6 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-
         </div>
       </main>
     </div>
