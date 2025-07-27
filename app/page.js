@@ -12,7 +12,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [sermons, setSermons] = useState([])
   const [editingSermon, setEditingSermon] = useState(null)
-  const [showAddForm, setShowAddForm] = useState(false)
   
   const supabase = createClient()
 
@@ -84,7 +83,6 @@ export default function Home() {
       alert('오류: ' + error.message)
     } else {
       alert('설교가 추가되었습니다!')
-      setShowAddForm(false)
       loadSermons()
       e.target.reset()
     }
@@ -127,15 +125,6 @@ export default function Home() {
       alert('설교가 삭제되었습니다!')
       loadSermons()
     }
-  }
-
-  const startEdit = (sermon) => {
-    setEditingSermon(sermon)
-    setShowAddForm(false)
-  }
-
-  const cancelEdit = () => {
-    setEditingSermon(null)
   }
 
   if (showLogin) {
@@ -183,10 +172,9 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-5xl mx-auto">
-          {/* 헤더 */}
           <div className="bg-white rounded-lg shadow p-6 mb-6">
             <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-blue-600">🏛️ 미니처치 관리자</h1>
+              <h1 className="text-2xl font-bold text-blue-600">미니처치 관리자</h1>
               <div className="flex items-center space-x-4">
                 <span className="text-gray-600">{user.email}</span>
                 <button
@@ -200,36 +188,25 @@ export default function Home() {
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold">📖 설교 관리</h3>
-              <button
-                onClick={() => {
-                  setShowAddForm(!showAddForm)
-                  setEditingSermon(null)
-                }}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                {showAddForm ? '취소' : '+ 새 설교 추가'}
-              </button>
-            </div>
+            <h3 className="text-xl font-semibold mb-6">설교 관리</h3>
             
-            {/* 설교 추가 폼 */}
-            {showAddForm && (
+            {/* 설교 추가/수정 폼 */}
+            {!editingSermon ? (
               <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-semibold mb-4 text-blue-800">새 설교 추가</h4>
+                <h4 className="font-semibold mb-4">새 설교 추가</h4>
                 <form onSubmit={handleAddSermon} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input
                       name="title"
                       type="text"
-                      placeholder="설교 제목 (예: 하나님의 사랑)"
+                      placeholder="설교 제목"
                       required
                       className="px-3 py-2 border border-gray-300 rounded-md"
                     />
                     <input
                       name="preacher"
                       type="text"
-                      placeholder="설교자 (예: 김목사)"
+                      placeholder="설교자"
                       required
                       className="px-3 py-2 border border-gray-300 rounded-md"
                     />
@@ -242,36 +219,33 @@ export default function Home() {
                     <input
                       name="series"
                       type="text"
-                      placeholder="시리즈명 (예: 여름성경학교)"
+                      placeholder="시리즈명 (선택)"
                       className="px-3 py-2 border border-gray-300 rounded-md"
                     />
                   </div>
                   <input
                     name="youtube"
                     type="url"
-                    placeholder="유튜브 URL (예: https://www.youtube.com/watch?v=...)"
+                    placeholder="유튜브 URL (선택)"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   />
                   <textarea
                     name="summary"
-                    placeholder="설교 요약 (나중에 AI로도 생성할 수 있습니다)"
-                    rows={4}
+                    placeholder="설교 요약 (선택)"
+                    rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   />
                   <button
                     type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                    className="bg-green-600 text-white px-4 py-2 rounded"
                   >
                     설교 등록
                   </button>
                 </form>
               </div>
-            )}
-
-            {/* 설교 수정 폼 */}
-            {editingSermon && (
+            ) : (
               <div className="mb-6 p-4 bg-yellow-50 rounded-lg">
-                <h4 className="font-semibold mb-4 text-yellow-800">설교 수정</h4>
+                <h4 className="font-semibold mb-4">설교 수정</h4>
                 <form onSubmit={handleUpdateSermon} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input
@@ -311,20 +285,20 @@ export default function Home() {
                   <textarea
                     name="summary"
                     defaultValue={editingSermon.summary || ''}
-                    rows={4}
+                    rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   />
                   <div className="flex space-x-2">
                     <button
                       type="submit"
-                      className="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700"
+                      className="bg-orange-600 text-white px-4 py-2 rounded"
                     >
                       수정 완료
                     </button>
                     <button
                       type="button"
-                      onClick={cancelEdit}
-                      className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                      onClick={() => setEditingSermon(null)}
+                      className="bg-gray-500 text-white px-4 py-2 rounded"
                     >
                       취소
                     </button>
@@ -335,47 +309,32 @@ export default function Home() {
 
             {/* 설교 목록 */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-gray-700">등록된 설교 목록 ({sermons.length}개)</h4>
+              <h4 className="font-semibold text-gray-700">등록된 설교 ({sermons.length}개)</h4>
               {sermons.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">등록된 설교가 없습니다.</p>
-                  <button
-                    onClick={() => setShowAddForm(true)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded"
-                  >
-                    첫 번째 설교 추가하기
-                  </button>
-                </div>
+                <p className="text-gray-500 text-center py-8">등록된 설교가 없습니다.</p>
               ) : (
                 sermons.map((sermon) => (
-                  <div key={sermon.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div key={sermon.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 text-lg mb-1">{sermon.title}</h4>
+                        <h4 className="font-semibold text-gray-900">{sermon.title}</h4>
                         <p className="text-sm text-gray-600 mb-2">
-                          👤 {sermon.preacher} · 📅 {sermon.sermon_date}
-                          {sermon.series_name && ` · 📚 ${sermon.series_name}`}
+                          {sermon.preacher} · {sermon.sermon_date}
+                          {sermon.series_name && ` · ${sermon.series_name}`}
                         </p>
                         {sermon.summary && (
                           <p className="text-sm text-gray-700 mb-2 p-2 bg-gray-50 rounded">
-                            📝 {sermon.summary}
+                            {sermon.summary}
                           </p>
                         )}
                         {sermon.youtube_url && (
-                          
-                            href={sermon.youtube_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-red-600 hover:text-red-800 text-sm flex items-center"
-                          >
-                            🎥 유튜브에서 보기 →
-                          </a>
+                          <p className="text-red-600 text-sm">유튜브 링크 있음</p>
                         )}
                       </div>
-                      <div className="flex space-x-2 ml-4">
+                      <div className="flex space-x-2">
                         <button 
-                          onClick={() => startEdit(sermon)}
-                          className="text-blue-600 hover:text-blue-800 text-sm px-3 py-1 border border-blue-300 rounded hover:bg-blue-50"
+                          onClick={() => setEditingSermon(sermon)}
+                          className="text-blue-600 text-sm px-2 py-1 border rounded"
                         >
                           수정
                         </button>
@@ -385,7 +344,7 @@ export default function Home() {
                               deleteSermon(sermon.id)
                             }
                           }}
-                          className="text-red-600 hover:text-red-800 text-sm px-3 py-1 border border-red-300 rounded hover:bg-red-50"
+                          className="text-red-600 text-sm px-2 py-1 border rounded"
                         >
                           삭제
                         </button>
@@ -404,18 +363,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto text-center">
-        <h1 className="text-4xl font-bold text-blue-600 mb-4">🏛️ 미니처치</h1>
-        <p className="text-xl text-gray-600 mb-8">
-          싸이월드 미니홈피처럼 쉬운 교회 홈페이지
-        </p>
+        <h1 className="text-4xl font-bold text-blue-600 mb-4">미니처치</h1>
         <div className="bg-white rounded-lg shadow p-8">
           <h2 className="text-2xl font-semibold mb-4">환영합니다!</h2>
-          <p className="text-gray-600 mb-6">
-            미니처치가 성공적으로 설치되었습니다.
-          </p>
           <button
             onClick={() => setShowLogin(true)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg"
           >
             관리자 로그인
           </button>
