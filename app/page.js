@@ -14,7 +14,7 @@ export default function Home() {
   const [editingSermon, setEditingSermon] = useState(null)
   const [viewMode, setViewMode] = useState('manage')
   const [selectedSermon, setSelectedSermon] = useState(null)
-  const [publicSermons, setPublicSermons] = useState([]) // 공개용 설교 목록
+  const [publicSermons, setPublicSermons] = useState([])
   
   const supabase = createClient()
 
@@ -42,7 +42,7 @@ export default function Home() {
       .from('sermons')
       .select('*')
       .order('sermon_date', { ascending: false })
-      .limit(6) // 최신 6개만
+      .limit(6)
     
     if (data) {
       setPublicSermons(data)
@@ -58,7 +58,7 @@ export default function Home() {
     
     if (data) {
       setSermons(data)
-      setPublicSermons(data) // 공개 목록도 업데이트
+      setPublicSermons(data)
     }
   }
 
@@ -379,7 +379,25 @@ export default function Home() {
               <div className="space-y-4">
                 <h4 className="font-semibold text-gray-700">등록된 설교 ({sermons.length}개)</h4>
                 {sermons.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">등록된 설교가 없습니다.</p>
+                  <p className="text-gray-400">서울시 강남구 테헤란로 123</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">📞 연락처</h4>
+              <p className="text-gray-400">02-1234-5678</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">⏰ 예배시간</h4>
+              <p className="text-gray-400">주일 오전 11시 | 수요일 저녁 7시</p>
+            </div>
+          </div>
+          <div className="mt-8 pt-8 border-t border-gray-700">
+            <p className="text-gray-400 text-sm">© 2025 새소망교회. 미니처치로 제작되었습니다.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}500 text-center py-8">등록된 설교가 없습니다.</p>
                 ) : (
                   sermons.map((sermon) => (
                     <div key={sermon.id} className="border border-gray-200 rounded-lg p-4">
@@ -669,4 +687,8 @@ export default function Home() {
       <footer className="bg-gray-800 text-white py-12">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <h3 className="text-2xl font-bold mb-4">🏛️ 새소망교회</h3>
-          <p className="text-gray-300 mb-4">하나님의 사랑으로 하나 되는 공동
+          <p className="text-gray-300 mb-4">하나님의 사랑으로 하나 되는 공동체</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+            <div>
+              <h4 className="font-semibold mb-2">📍 교회 위치</h4>
+              <p className="text-gray-
