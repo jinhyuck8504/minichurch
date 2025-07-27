@@ -12,6 +12,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [sermons, setSermons] = useState([])
   const [editingSermon, setEditingSermon] = useState(null)
+  const [viewMode, setViewMode] = useState('manage') // 'manage' or 'preview'
+  const [selectedSermon, setSelectedSermon] = useState(null) // 상세보기용
   
   const supabase = createClient()
 
@@ -127,6 +129,13 @@ export default function Home() {
     }
   }
 
+  // 유튜브 ID 추출 함수
+  const getYouTubeVideoId = (url) => {
+    if (!url) return null
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
+    return match ? match[1] : null
+  }
+
   if (showLogin) {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
@@ -171,10 +180,11 @@ export default function Home() {
   if (isLoggedIn && user) {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
+          {/* 헤더 */}
           <div className="bg-white rounded-lg shadow p-6 mb-6">
             <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-blue-600">미니처치 관리자</h1>
+              <h1 className="text-2xl font-bold text-blue-600">🏛️ 미니처치 관리자</h1>
               <div className="flex items-center space-x-4">
                 <span className="text-gray-600">{user.email}</span>
                 <button
@@ -187,174 +197,309 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-xl font-semibold mb-6">설교 관리</h3>
-            
-            {/* 설교 추가/수정 폼 */}
-            {!editingSermon ? (
-              <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-semibold mb-4">새 설교 추가</h4>
-                <form onSubmit={handleAddSermon} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* 탭 메뉴 */}
+          <div className="bg-white rounded-lg shadow mb-6">
+            <div className="flex border-b">
+              <button
+                onClick={() => {
+                  setViewMode('manage')
+                  setSelectedSermon(null)
+                }}
+                className={`px-6 py-3 font-medium ${
+                  viewMode === 'manage' 
+                    ? 'text-blue-600 border-b-2 border-blue-600' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                📝 설교 관리
+              </button>
+              <button
+                onClick={() => {
+                  setViewMode('preview')
+                  setSelectedSermon(null)
+                }}
+                className={`px-6 py-3 font-medium ${
+                  viewMode === 'preview' 
+                    ? 'text-blue-600 border-b-2 border-blue-600' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                👁️ 미리보기 (성도용)
+              </button>
+            </div>
+          </div>
+
+          {/* 관리 모드 */}
+          {viewMode === 'manage' && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-xl font-semibold mb-6">📝 설교 관리</h3>
+              
+              {/* 설교 추가/수정 폼 */}
+              {!editingSermon ? (
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-semibold mb-4">새 설교 추가</h4>
+                  <form onSubmit={handleAddSermon} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input
+                        name="title"
+                        type="text"
+                        placeholder="설교 제목"
+                        required
+                        className="px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                      <input
+                        name="preacher"
+                        type="text"
+                        placeholder="설교자"
+                        required
+                        className="px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                      <input
+                        name="date"
+                        type="date"
+                        required
+                        className="px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                      <input
+                        name="series"
+                        type="text"
+                        placeholder="시리즈명 (선택)"
+                        className="px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                    </div>
                     <input
-                      name="title"
-                      type="text"
-                      placeholder="설교 제목"
-                      required
-                      className="px-3 py-2 border border-gray-300 rounded-md"
+                      name="youtube"
+                      type="url"
+                      placeholder="유튜브 URL (선택)"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
-                    <input
-                      name="preacher"
-                      type="text"
-                      placeholder="설교자"
-                      required
-                      className="px-3 py-2 border border-gray-300 rounded-md"
+                    <textarea
+                      name="summary"
+                      placeholder="설교 요약 (선택)"
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     />
-                    <input
-                      name="date"
-                      type="date"
-                      required
-                      className="px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                    <input
-                      name="series"
-                      type="text"
-                      placeholder="시리즈명 (선택)"
-                      className="px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-                  <input
-                    name="youtube"
-                    type="url"
-                    placeholder="유튜브 URL (선택)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                  <textarea
-                    name="summary"
-                    placeholder="설교 요약 (선택)"
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                  <button
-                    type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded"
-                  >
-                    설교 등록
-                  </button>
-                </form>
-              </div>
-            ) : (
-              <div className="mb-6 p-4 bg-yellow-50 rounded-lg">
-                <h4 className="font-semibold mb-4">설교 수정</h4>
-                <form onSubmit={handleUpdateSermon} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input
-                      name="title"
-                      type="text"
-                      defaultValue={editingSermon.title}
-                      required
-                      className="px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                    <input
-                      name="preacher"
-                      type="text"
-                      defaultValue={editingSermon.preacher}
-                      required
-                      className="px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                    <input
-                      name="date"
-                      type="date"
-                      defaultValue={editingSermon.sermon_date}
-                      required
-                      className="px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                    <input
-                      name="series"
-                      type="text"
-                      defaultValue={editingSermon.series_name || ''}
-                      className="px-3 py-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-                  <input
-                    name="youtube"
-                    type="url"
-                    defaultValue={editingSermon.youtube_url || ''}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                  <textarea
-                    name="summary"
-                    defaultValue={editingSermon.summary || ''}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                  <div className="flex space-x-2">
                     <button
                       type="submit"
-                      className="bg-orange-600 text-white px-4 py-2 rounded"
+                      className="bg-green-600 text-white px-4 py-2 rounded"
                     >
-                      수정 완료
+                      설교 등록
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditingSermon(null)}
-                      className="bg-gray-500 text-white px-4 py-2 rounded"
-                    >
-                      취소
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
+                  </form>
+                </div>
+              ) : (
+                <div className="mb-6 p-4 bg-yellow-50 rounded-lg">
+                  <h4 className="font-semibold mb-4">설교 수정</h4>
+                  <form onSubmit={handleUpdateSermon} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input
+                        name="title"
+                        type="text"
+                        defaultValue={editingSermon.title}
+                        required
+                        className="px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                      <input
+                        name="preacher"
+                        type="text"
+                        defaultValue={editingSermon.preacher}
+                        required
+                        className="px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                      <input
+                        name="date"
+                        type="date"
+                        defaultValue={editingSermon.sermon_date}
+                        required
+                        className="px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                      <input
+                        name="series"
+                        type="text"
+                        defaultValue={editingSermon.series_name || ''}
+                        className="px-3 py-2 border border-gray-300 rounded-md"
+                      />
+                    </div>
+                    <input
+                      name="youtube"
+                      type="url"
+                      defaultValue={editingSermon.youtube_url || ''}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                    <textarea
+                      name="summary"
+                      defaultValue={editingSermon.summary || ''}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                    <div className="flex space-x-2">
+                      <button
+                        type="submit"
+                        className="bg-orange-600 text-white px-4 py-2 rounded"
+                      >
+                        수정 완료
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingSermon(null)}
+                        className="bg-gray-500 text-white px-4 py-2 rounded"
+                      >
+                        취소
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
 
-            {/* 설교 목록 */}
-            <div className="space-y-4">
-              <h4 className="font-semibold text-gray-700">등록된 설교 ({sermons.length}개)</h4>
+              {/* 설교 목록 */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-700">등록된 설교 ({sermons.length}개)</h4>
+                {sermons.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">등록된 설교가 없습니다.</p>
+                ) : (
+                  sermons.map((sermon) => (
+                    <div key={sermon.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <button
+                            onClick={() => setSelectedSermon(selectedSermon?.id === sermon.id ? null : sermon)}
+                            className="text-left w-full"
+                          >
+                            <h4 className="font-semibold text-gray-900 hover:text-blue-600 cursor-pointer">
+                              {sermon.title} {selectedSermon?.id === sermon.id ? '▼' : '▶'}
+                            </h4>
+                          </button>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {sermon.preacher} · {sermon.sermon_date}
+                            {sermon.series_name && ` · ${sermon.series_name}`}
+                          </p>
+                          
+                          {/* 설교 상세 내용 (펼치기) */}
+                          {selectedSermon?.id === sermon.id && (
+                            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                              {sermon.youtube_url && (
+                                <div className="mb-4">
+                                  <h5 className="font-medium mb-2">🎥 설교 영상</h5>
+                                  {getYouTubeVideoId(sermon.youtube_url) ? (
+                                    <div className="aspect-video">
+                                      <iframe
+                                        width="100%"
+                                        height="100%"
+                                        src={`https://www.youtube.com/embed/${getYouTubeVideoId(sermon.youtube_url)}`}
+                                        title={sermon.title}
+                                        frameBorder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                        className="rounded-lg"
+                                      ></iframe>
+                                    </div>
+                                  ) : (
+                                    <a 
+                                      href={sermon.youtube_url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:underline"
+                                    >
+                                      유튜브에서 보기 →
+                                    </a>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {sermon.summary && (
+                                <div>
+                                  <h5 className="font-medium mb-2">📝 설교 요약</h5>
+                                  <p className="text-gray-700 whitespace-pre-wrap">{sermon.summary}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex space-x-2 ml-4">
+                          <button 
+                            onClick={() => setEditingSermon(sermon)}
+                            className="text-blue-600 text-sm px-2 py-1 border rounded"
+                          >
+                            수정
+                          </button>
+                          <button 
+                            onClick={() => {
+                              if (confirm('정말 삭제하시겠습니까?')) {
+                                deleteSermon(sermon.id)
+                              }
+                            }}
+                            className="text-red-600 text-sm px-2 py-1 border rounded"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 미리보기 모드 (성도용) */}
+          {viewMode === 'preview' && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-blue-600 mb-2">🏛️ 새소망교회</h2>
+                <p className="text-gray-600">하나님의 사랑으로 하나 되는 공동체</p>
+              </div>
+
+              <h3 className="text-2xl font-semibold mb-6 text-center">📖 설교 말씀</h3>
+              
               {sermons.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">등록된 설교가 없습니다.</p>
               ) : (
-                sermons.map((sermon) => (
-                  <div key={sermon.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">{sermon.title}</h4>
-                        <p className="text-sm text-gray-600 mb-2">
-                          {sermon.preacher} · {sermon.sermon_date}
-                          {sermon.series_name && ` · ${sermon.series_name}`}
-                        </p>
-                        {sermon.summary && (
-                          <p className="text-sm text-gray-700 mb-2 p-2 bg-gray-50 rounded">
-                            {sermon.summary}
-                          </p>
-                        )}
-                        {sermon.youtube_url && (
-                          <p className="text-red-600 text-sm">유튜브 링크 있음</p>
-                        )}
+                <div className="grid gap-6">
+                  {sermons.map((sermon) => (
+                    <div key={sermon.id} className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
+                      <div className="mb-4">
+                        <h4 className="text-xl font-semibold text-gray-900 mb-2">{sermon.title}</h4>
+                        <div className="flex items-center text-sm text-gray-600 mb-3">
+                          <span>👤 {sermon.preacher}</span>
+                          <span className="mx-2">•</span>
+                          <span>📅 {sermon.sermon_date}</span>
+                          {sermon.series_name && (
+                            <>
+                              <span className="mx-2">•</span>
+                              <span>📚 {sermon.series_name}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex space-x-2">
-                        <button 
-                          onClick={() => setEditingSermon(sermon)}
-                          className="text-blue-600 text-sm px-2 py-1 border rounded"
-                        >
-                          수정
-                        </button>
-                        <button 
-                          onClick={() => {
-                            if (confirm('정말 삭제하시겠습니까?')) {
-                              deleteSermon(sermon.id)
-                            }
-                          }}
-                          className="text-red-600 text-sm px-2 py-1 border rounded"
-                        >
-                          삭제
-                        </button>
-                      </div>
+
+                      {sermon.youtube_url && getYouTubeVideoId(sermon.youtube_url) && (
+                        <div className="mb-4">
+                          <div className="aspect-video rounded-lg overflow-hidden">
+                            <iframe
+                              width="100%"
+                              height="100%"
+                              src={`https://www.youtube.com/embed/${getYouTubeVideoId(sermon.youtube_url)}`}
+                              title={sermon.title}
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            ></iframe>
+                          </div>
+                        </div>
+                      )}
+
+                      {sermon.summary && (
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <h5 className="font-medium text-blue-800 mb-2">📝 설교 요약</h5>
+                          <p className="text-gray-700 whitespace-pre-wrap">{sermon.summary}</p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
-          </div>
+          )}
         </div>
       </div>
     )
@@ -363,7 +508,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto text-center">
-        <h1 className="text-4xl font-bold text-blue-600 mb-4">미니처치</h1>
+        <h1 className="text-4xl font-bold text-blue-600 mb-4">🏛️ 미니처치</h1>
         <div className="bg-white rounded-lg shadow p-8">
           <h2 className="text-2xl font-semibold mb-4">환영합니다!</h2>
           <button
