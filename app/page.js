@@ -72,8 +72,7 @@ export default function Home() {
       .insert([{
         title: formData.get('title'),
         preacher: formData.get('preacher'),
-        sermon_date: formData.get('date'),
-        church_id: '00000000-0000-0000-0000-000000000000'
+        sermon_date: formData.get('date')
       }])
     
     if (error) {
@@ -82,6 +81,20 @@ export default function Home() {
       alert('설교가 추가되었습니다!')
       loadSermons()
       e.target.reset()
+    }
+  }
+
+  const deleteSermon = async (sermonId) => {
+    const { error } = await supabase
+      .from('sermons')
+      .delete()
+      .eq('id', sermonId)
+    
+    if (error) {
+      alert('삭제 실패: ' + error.message)
+    } else {
+      alert('설교가 삭제되었습니다!')
+      loadSermons()
     }
   }
 
@@ -132,18 +145,21 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-lg shadow p-6 mb-6">
             <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-blue-600">관리자</h1>
-              <button
-                onClick={handleLogout}
-                className="bg-red-500 text-white px-4 py-2 rounded"
-              >
-                로그아웃
-              </button>
+              <h1 className="text-2xl font-bold text-blue-600">🏛️ 미니처치 관리자</h1>
+              <div className="flex items-center space-x-4">
+                <span className="text-gray-600">{user.email}</span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-500 text-white px-4 py-2 rounded"
+                >
+                  로그아웃
+                </button>
+              </div>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-xl font-semibold mb-6">설교 관리</h3>
+            <h3 className="text-xl font-semibold mb-6">📖 설교 관리</h3>
             
             <form onSubmit={handleAddSermon} className="mb-6 space-y-4">
               <input
@@ -168,22 +184,45 @@ export default function Home() {
               />
               <button
                 type="submit"
-                className="bg-green-600 text-white px-4 py-2 rounded"
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
               >
                 설교 등록
               </button>
             </form>
 
             <div className="space-y-3">
+              <h4 className="font-semibold text-gray-700">등록된 설교 목록</h4>
               {sermons.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">등록된 설교가 없습니다.</p>
               ) : (
                 sermons.map((sermon) => (
                   <div key={sermon.id} className="border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-semibold">{sermon.title}</h4>
-                    <p className="text-sm text-gray-600">
-                      {sermon.preacher} · {sermon.sermon_date}
-                    </p>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">{sermon.title}</h4>
+                        <p className="text-sm text-gray-600">
+                          {sermon.preacher} · {sermon.sermon_date}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={() => alert('수정 기능은 다음 업데이트에서 제공될 예정입니다!')}
+                          className="text-blue-600 hover:text-blue-800 text-sm px-2 py-1"
+                        >
+                          수정
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if (confirm('정말 삭제하시겠습니까?')) {
+                              deleteSermon(sermon.id)
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-800 text-sm px-2 py-1"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ))
               )}
@@ -198,11 +237,17 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto text-center">
         <h1 className="text-4xl font-bold text-blue-600 mb-4">🏛️ 미니처치</h1>
+        <p className="text-xl text-gray-600 mb-8">
+          싸이월드 미니홈피처럼 쉬운 교회 홈페이지
+        </p>
         <div className="bg-white rounded-lg shadow p-8">
           <h2 className="text-2xl font-semibold mb-4">환영합니다!</h2>
+          <p className="text-gray-600 mb-6">
+            미니처치가 성공적으로 설치되었습니다.
+          </p>
           <button
             onClick={() => setShowLogin(true)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
           >
             관리자 로그인
           </button>
