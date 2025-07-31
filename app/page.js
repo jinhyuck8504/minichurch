@@ -514,54 +514,146 @@ export default function Home() {
     )
   }
 
-  // 공개 홈페이지
+  // 공개 홈페이지 (아름다운 버전)
   return (
-    <div className="min-h-screen bg-blue-50">
-      <header className="bg-white shadow p-6">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-blue-600">🏛️ 새소망교회</h1>
-          <button
-            onClick={() => setShowLogin(true)}
-            className="text-sm text-gray-600 px-3 py-1 border rounded hover:bg-gray-50"
-          >
-            관리자
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* 헤더 */}
+      <header className="bg-white shadow-lg">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <h1 className="text-3xl font-bold text-blue-600">🏛️ 새소망교회</h1>
+            </div>
+            <button
+              onClick={() => setShowLogin(true)}
+              className="text-sm text-gray-600 hover:text-gray-800 px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 transition-colors"
+            >
+              관리자
+            </button>
+          </div>
         </div>
       </header>
 
-      <section className="py-16 text-center">
-        <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">하나님의 사랑으로 하나 되는 공동체</h2>
-          <p className="text-xl text-gray-600">새소망교회에 오신 것을 환영합니다</p>
+      {/* 교회 소개 섹션 */}
+      <section className="py-20 text-center">
+        <div className="max-w-5xl mx-auto px-4">
+          <h2 className="text-5xl font-bold text-gray-800 mb-6">하나님의 사랑으로 하나 되는 공동체</h2>
+          <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
+            새소망교회에 오신 것을 환영합니다. 함께 하나님의 말씀을 나누고 성장하는 교회입니다.
+          </p>
+          
+          {/* 교회 정보 카드 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="text-4xl mb-4">⛪</div>
+              <h3 className="font-bold text-xl mb-3 text-gray-800">주일예배</h3>
+              <p className="text-gray-600">매주 일요일 오전 11시</p>
+            </div>
+            <div className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="text-4xl mb-4">🙏</div>
+              <h3 className="font-bold text-xl mb-3 text-gray-800">수요예배</h3>
+              <p className="text-gray-600">매주 수요일 저녁 7시</p>
+            </div>
+            <div className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <div className="text-4xl mb-4">📍</div>
+              <h3 className="font-bold text-xl mb-3 text-gray-800">위치</h3>
+              <p className="text-gray-600">서울시 강남구 테헤란로 123</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center mb-8">📖 최근 설교</h2>
-          
+      {/* 설교 섹션 */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-800 mb-4">📖 최근 설교 말씀</h2>
+            <p className="text-xl text-gray-600">하나님의 말씀으로 은혜받으세요</p>
+          </div>
+
           {sermons.length === 0 ? (
-            <p className="text-center text-gray-500">등록된 설교가 없습니다.</p>
+            <div className="text-center py-16">
+              <div className="text-6xl mb-6">📖</div>
+              <p className="text-xl text-gray-500 mb-4">아직 등록된 설교가 없습니다.</p>
+              <p className="text-gray-400">곧 새로운 말씀으로 찾아뵙겠습니다.</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {sermons.map((sermon) => (
-                <div key={sermon.id} className="bg-white border rounded-lg p-6 shadow hover:shadow-lg transition-shadow">
-                  <h3 className="text-lg font-bold mb-2">{sermon.title}</h3>
-                  <p className="text-gray-600 mb-2">{sermon.preacher} · {sermon.sermon_date}</p>
-                  {sermon.series_name && (
-                    <p className="text-sm text-purple-600 mb-2">📚 {sermon.series_name}</p>
+                <div key={sermon.id} className="group bg-gradient-to-br from-white to-blue-50 rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                  {/* 유튜브 썸네일 또는 기본 이미지 */}
+                  {sermon.youtube_url && getYouTubeVideoId(sermon.youtube_url) ? (
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={`https://img.youtube.com/vi/${getYouTubeVideoId(sermon.youtube_url)}/maxresdefault.jpg`}
+                        alt={sermon.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                        <div className="bg-red-600 text-white p-4 rounded-full shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                        설교 영상
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-48 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                      <div className="text-white text-center">
+                        <div className="text-5xl mb-3">📖</div>
+                        <p className="text-xl font-semibold">설교 말씀</p>
+                      </div>
+                    </div>
                   )}
-                  {sermon.summary && (
-                    <p className="text-gray-700 text-sm mb-4">{sermon.summary.length > 100 ? sermon.summary.substring(0, 100) + '...' : sermon.summary}</p>
-                  )}
-                  {sermon.youtube_url && (
-                    <button 
-                      onClick={() => window.open(sermon.youtube_url, '_blank')}
-                      className="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700"
-                    >
-                      🎥 설교 듣기
-                    </button>
-                  )}
+
+                  {/* 카드 내용 */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors duration-300">
+                      {sermon.title}
+                    </h3>
+                    
+                    <div className="flex items-center text-sm text-gray-600 mb-4 space-x-4">
+                      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
+                        👤 {sermon.preacher}
+                      </span>
+                      <span className="flex items-center">
+                        📅 {sermon.sermon_date}
+                      </span>
+                    </div>
+
+                    {sermon.series_name && (
+                      <div className="mb-4">
+                        <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                          📚 {sermon.series_name}
+                        </span>
+                      </div>
+                    )}
+
+                    {sermon.summary && (
+                      <p className="text-gray-700 text-sm mb-6 leading-relaxed">
+                        {sermon.summary.length > 120 ? sermon.summary.substring(0, 120) + '...' : sermon.summary}
+                      </p>
+                    )}
+
+                    {sermon.youtube_url && getYouTubeVideoId(sermon.youtube_url) ? (
+                      <button 
+                        onClick={() => window.open(sermon.youtube_url, '_blank')}
+                        className="w-full bg-gradient-to-r from-red-600 to-red-700 text-white py-3 rounded-xl font-semibold hover:from-red-700 hover:to-red-800 transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+                        </svg>
+                        <span>설교 시청하기</span>
+                      </button>
+                    ) : (
+                      <div className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-semibold text-center">
+                        📖 설교 말씀
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -569,9 +661,54 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="bg-gray-800 text-white py-8 text-center">
-        <h3 className="text-xl font-bold mb-2">🏛️ 새소망교회</h3>
-        <p className="text-gray-400">© 2025 새소망교회. 미니처치로 제작되었습니다.</p>
+      {/* 교회 소식 및 연락처 */}
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-700 text-white">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <h2 className="text-4xl font-bold mb-8">📞 교회 연락처</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bg-white bg-opacity-10 p-6 rounded-2xl backdrop-blur-sm">
+              <div className="text-3xl mb-4">📍</div>
+              <h3 className="text-xl font-semibold mb-2">주소</h3>
+              <p className="opacity-90">서울시 강남구 테헤란로 123</p>
+            </div>
+            <div className="bg-white bg-opacity-10 p-6 rounded-2xl backdrop-blur-sm">
+              <div className="text-3xl mb-4">📞</div>
+              <h3 className="text-xl font-semibold mb-2">전화번호</h3>
+              <p className="opacity-90">02-1234-5678</p>
+            </div>
+            <div className="bg-white bg-opacity-10 p-6 rounded-2xl backdrop-blur-sm">
+              <div className="text-3xl mb-4">✉️</div>
+              <h3 className="text-xl font-semibold mb-2">이메일</h3>
+              <p className="opacity-90">info@newhopeChurch.org</p>
+            </div>
+          </div>
+          
+          <div className="mt-12 p-8 bg-white bg-opacity-10 rounded-2xl backdrop-blur-sm">
+            <h3 className="text-2xl font-bold mb-4">🎉 교회 소식</h3>
+            <p className="text-lg opacity-90 mb-4">
+              새소망교회에서 함께 예배하고 교제할 성도님들을 환영합니다!
+            </p>
+            <p className="opacity-80">
+              처음 오시는 분들을 위한 새가족 환영식이 매월 첫째 주일에 있습니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 푸터 */}
+      <footer className="bg-gray-800 text-white py-12">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <div className="flex justify-center items-center space-x-3 mb-6">
+            <h2 className="text-2xl font-bold">🏛️ 새소망교회</h2>
+          </div>
+          <p className="text-gray-400 mb-4">
+            하나님의 사랑으로 하나 되는 공동체
+          </p>
+          <div className="text-sm text-gray-500">
+            <p>© 2025 새소망교회. All rights reserved.</p>
+            <p className="mt-2">주소: 서울시 강남구 테헤란로 123 | 전화: 02-1234-5678</p>
+          </div>
+        </div>
       </footer>
     </div>
   )
