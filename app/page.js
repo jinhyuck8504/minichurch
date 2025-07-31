@@ -1,99 +1,4 @@
-// 공개 홈페이지 (심플한 화이트 디자인)
-  return (
-    <div className="min-h-screen bg-gray-100">
-      {/* 토스트 알림 */}
-      {toast && <Toast message={toast.message} type={toast.type} onClose={closeToast} />}
-      
-      {/* 헤더 */}
-      <header className="bg-white shadow-md">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <h1 className="text-3xl font-bold text-gray-900">🏛️ 새소망교회</h1>
-            </div>
-            <button
-              onClick={() => setShowLogin(true)}
-              className="text-sm text-gray-600 hover:text-gray-800 px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors duration-200"
-            >
-              관리자
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* 교회 소개 섹션 */}
-      <section className="py-20 text-center">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-5xl font-bold text-gray-900 mb-6">하나님의 사랑으로 하나 되는 공동체</h2>
-          <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
-            새소망교회에 오신 것을 환영합니다. 함께 하나님의 말씀을 나누고 성장하는 교회입니다.
-          </p>
-          
-          {/* 교회 정보 카드 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="text-4xl mb-4">⛪</div>
-              <h3 className="font-bold text-xl mb-3 text-gray-900">주일예배</h3>
-              <p className="text-gray-600">매주 일요일 오전 11시</p>
-            </div>
-            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="text-4xl mb-4">🙏</div>
-              <h3 className="font-bold text-xl mb-3 text-gray-900">수요예배</h3>
-              <p className="text-gray-600">매주 수요일 저녁 7시</p>
-            </div>
-            <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="text-4xl mb-4">📍</div>
-              <h3 className="font-bold text-xl mb-3 text-gray-900">위치</h3>
-              <p className="text-gray-600">서울시 강남구 테헤란로 123</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 설교 섹션 */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">📖 최근 설교 말씀</h2>
-            <p className="text-xl text-gray-600">하나님의 말씀으로 은혜받으세요</p>
-          </div>
-
-          {sermons.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-6">📖</div>
-              <p className="text-xl text-gray-500 mb-4">아직 등록된 설교가 없습니다.</p>
-              <p className="text-gray-400">곧 새로운 말씀으로 찾아뵙겠습니다.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {sermons.map((sermon) => (
-                <div key={sermon.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-gray-200">
-                  {/* 유튜브 썸네일 또는 기본 이미지 */}
-                  {sermon.youtube_url && getYouTubeVideoId(sermon.youtube_url) ? (
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={`https://img.youtube.com/vi/${getYouTubeVideoId(sermon.youtube_url)}/maxresdefault.jpg`}
-                        alt={sermon.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                        <div className="bg-red-600 text-white p-4 rounded-full shadow-lg">
-                          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
-                        설교 영상
-                      </div>
-                    </div>
-                  ) : (
-                    <div className            {/* 설교 추가 폼 - 유효성 검사 추가 */}
-            {showAddForm && (
-              <div className="p-6 bg-blue-50 border-b">
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="bg-blue-500 p-1 rounded text-white">
-                    <div className="text'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase'
@@ -570,7 +475,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* 설교 추가 폼 - 유효성 검사 추가 */}
+            {/* 설교 추가 폼 */}
             {showAddForm && (
               <div className="p-6 bg-blue-50 border-b">
                 <div className="flex items-center space-x-2 mb-4">
@@ -686,7 +591,7 @@ export default function Home() {
               </div>
             )}
 
-            {/* 설교 수정 폼 - 유효성 검사 추가 */}
+            {/* 설교 수정 폼 */}
             {editingSermon && (
               <div className="p-6 bg-orange-50 border-b">
                 <div className="flex items-center space-x-2 mb-4">
@@ -707,62 +612,6 @@ export default function Home() {
                         defaultValue={editingSermon.title}
                         required
                         className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200 ${
-                          formErrors.title ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                      />
-                      {formErrors.title && <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        설교자 <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        name="preacher"
-                        type="text"
-                        defaultValue={editingSermon.preacher}
-                        required
-                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200 ${
-                          formErrors.preacher ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                      />
-                      {formErrors.preacher && <p className="text-red-500 text-sm mt-1">{formErrors.preacher}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        설교 날짜 <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        name="date"
-                        type="date"
-                        defaultValue={editingSermon.sermon_date}
-                        required
-                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200 ${
-                          formErrors.date ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                      />
-                      {formErrors.date && <p className="text-red-500 text-sm mt-1">{formErrors.date}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        시리즈명
-                      </label>
-                      <input
-                        name="series"
-                        type="text"
-                        defaultValue={editingSermon.series_name || ''}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      유튜브 URL
-                    </label>
-                    <input
-                      name="youtube"
-                      type="url"
-                      defaultValue={editingSermon.youtube_url || ''}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200 ${
                         formErrors.youtube ? 'border-red-500 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -803,7 +652,7 @@ export default function Home() {
               </div>
             )}
 
-            {/* 설교 목록 - 심플한 카드 디자인 */}
+            {/* 설교 목록 */}
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-2">
@@ -832,7 +681,7 @@ export default function Home() {
               ) : (
                 <div className="space-y-4">
                   {sermons.map((sermon) => (
-                    <div key={sermon.id} className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+                    <div key={sermon.id} className="bg-white rounded-lg shadow-md border border-gray-200">
                       <div className="p-5">
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between space-y-4 lg:space-y-0">
                           <div className="flex-1">
@@ -874,7 +723,7 @@ export default function Home() {
                               )}
                             </div>
                             
-                            {/* 설교 상세 내용 (펼치기/접기) */}
+                            {/* 설교 상세 내용 */}
                             {selectedSermon?.id === sermon.id && (
                               <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                 {sermon.youtube_url && getYouTubeVideoId(sermon.youtube_url) && (
@@ -925,7 +774,7 @@ export default function Home() {
                               </div>
                             )}
                             
-                            {/* 간단 표시 (접혀있을 때) */}
+                            {/* 간단 표시 */}
                             {selectedSermon?.id !== sermon.id && sermon.summary && (
                               <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                                 <p className="text-sm text-gray-700">
@@ -969,9 +818,12 @@ export default function Home() {
     )
   }
 
-  // 공개 홈페이지 (심플한 화이트 디자인)
+  // 공개 홈페이지
   return (
     <div className="min-h-screen bg-gray-100">
+      {/* 토스트 알림 */}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={closeToast} />}
+      
       {/* 헤더 */}
       <header className="bg-white shadow-md">
         <div className="max-w-6xl mx-auto px-4 py-6">
@@ -1066,7 +918,7 @@ export default function Home() {
 
                   {/* 카드 내용 */}
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 hover:text-blue-600 transition-colors duration-300">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">
                       {sermon.title}
                     </h3>
                     
@@ -1165,6 +1017,79 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* CSS 스타일 */}
+      <style jsx>{`
+        @keyframes slide-down {
+          from {
+            transform: translateY(-100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-down {
+          animation: slide-down 0.3s ease-out;
+        }
+      `}</style>
     </div>
   )
-}
+}${
+                          formErrors.title ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                      />
+                      {formErrors.title && <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        설교자 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        name="preacher"
+                        type="text"
+                        defaultValue={editingSermon.preacher}
+                        required
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200 ${
+                          formErrors.preacher ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                      />
+                      {formErrors.preacher && <p className="text-red-500 text-sm mt-1">{formErrors.preacher}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        설교 날짜 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        name="date"
+                        type="date"
+                        defaultValue={editingSermon.sermon_date}
+                        required
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200 ${
+                          formErrors.date ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                      />
+                      {formErrors.date && <p className="text-red-500 text-sm mt-1">{formErrors.date}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        시리즈명
+                      </label>
+                      <input
+                        name="series"
+                        type="text"
+                        defaultValue={editingSermon.series_name || ''}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      유튜브 URL
+                    </label>
+                    <input
+                      name="youtube"
+                      type="url"
+                      defaultValue={editingSermon.youtube_url || ''}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200
