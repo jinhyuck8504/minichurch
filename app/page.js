@@ -12,6 +12,7 @@ export default function Home() {
   const [sermons, setSermons] = useState([])
   const [editingSermon, setEditingSermon] = useState(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [selectedSermon, setSelectedSermon] = useState(null)
   
   const supabase = createClient()
 
@@ -128,6 +129,13 @@ export default function Home() {
     }
   }
 
+  // 유튜브 ID 추출 함수
+  const getYouTubeVideoId = (url) => {
+    if (!url) return null
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
+    return match ? match[1] : null
+  }
+
   // 로그인 폼
   if (showLogin) {
     return (
@@ -194,6 +202,7 @@ export default function Home() {
                 onClick={() => {
                   setShowAddForm(!showAddForm)
                   setEditingSermon(null)
+                  setSelectedSermon(null)
                 }}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               >
@@ -408,18 +417,68 @@ export default function Home() {
                   <div key={sermon.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 text-lg mb-1">{sermon.title}</h4>
+                        <button
+                          onClick={() => setSelectedSermon(selectedSermon?.id === sermon.id ? null : sermon)}
+                          className="text-left w-full"
+                        >
+                          <h4 className="font-semibold text-gray-900 text-lg mb-1 hover:text-blue-600 cursor-pointer">
+                            {sermon.title} {selectedSermon?.id === sermon.id ? '▼' : '▶'}
+                          </h4>
+                        </button>
                         <p className="text-sm text-gray-600 mb-2">
                           👤 {sermon.preacher} · 📅 {sermon.sermon_date}
                           {sermon.series_name && ` · 📚 ${sermon.series_name}`}
                         </p>
-                        {sermon.youtube_url && (
-                          <p className="text-sm text-red-600 mb-2">🎥 유튜브 영상 있음</p>
+                        
+                        {/* 설교 상세 내용 (펼치기/접기) */}
+                        {selectedSermon?.id === sermon.id && (
+                          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                            {sermon.youtube_url && getYouTubeVideoId(sermon.youtube_url) && (
+                              <div className="mb-4">
+                                <h5 className="font-medium mb-2">🎥 설교 영상</h5>
+                                <div className="aspect-video rounded-lg overflow-hidden">
+                                  <iframe
+                                    width="100%"
+                                    height="100%"
+                                    src={`https://www.youtube.com/embed/${getYouTubeVideoId(sermon.youtube_url)}`}
+                                    title={sermon.title}
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                  ></iframe>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {sermon.summary && (
+                              <div>
+                                <h5 className="font-medium mb-2">📝 설교 요약</h5>
+                                <p className="text-gray-700 whitespace-pre-wrap bg-white p-3 rounded border">
+                                  {sermon.summary}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {!sermon.youtube_url && !sermon.summary && (
+                              <p className="text-gray-500 text-center py-4">
+                                추가 정보가 없습니다. 유튜브 URL이나 요약을 추가해보세요.
+                              </p>
+                            )}
+                          </div>
                         )}
-                        {sermon.summary && (
-                          <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded mt-2">
-                            📝 {sermon.summary}
-                          </p>
+                        
+                        {/* 간단 표시 (접혀있을 때) */}
+                        {selectedSermon?.id !== sermon.id && (
+                          <>
+                            {sermon.youtube_url && (
+                              <p className="text-sm text-red-600 mb-2">🎥 유튜브 영상 있음</p>
+                            )}
+                            {sermon.summary && (
+                              <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded mt-2">
+                                📝 {sermon.summary.length > 100 ? sermon.summary.substring(0, 100) + '...' : sermon.summary}
+                              </p>
+                            )}
+                          </>
                         )}
                       </div>
                       <div className="flex space-x-2 ml-4">
@@ -427,6 +486,7 @@ export default function Home() {
                           onClick={() => {
                             setEditingSermon(sermon)
                             setShowAddForm(false)
+                            setSelectedSermon(null)
                           }}
                           className="text-blue-600 hover:text-blue-800 text-sm px-3 py-1 border border-blue-300 rounded hover:bg-blue-50"
                         >
@@ -492,7 +552,7 @@ export default function Home() {
                     <p className="text-sm text-purple-600 mb-2">📚 {sermon.series_name}</p>
                   )}
                   {sermon.summary && (
-                    <p className="text-gray-700 text-sm mb-4">{sermon.summary}</p>
+                    <p className="text-gray-700 text-sm mb-4">{sermon.summary.length > 100 ? sermon.summary.substring(0, 100) + '...' : sermon.summary}</p>
                   )}
                   {sermon.youtube_url && (
                     <button 
