@@ -16,7 +16,7 @@ function Toast({ message, type, onClose }) {
   const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'
 
   return (
-    <div className={`fixed top-4 right-4 ${bgColor} text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center space-x-3 animate-slide-down`}>
+    <div className={`fixed top-4 right-4 ${bgColor} text-white px-6 py-4 rounded-lg shadow-lg z-50 flex items-center space-x-3`} style={{animation: 'slideDown 0.3s ease-out'}}>
       <span className="text-lg">{icon}</span>
       <span className="font-medium">{message}</span>
       <button 
@@ -311,7 +311,6 @@ export default function Home() {
   if (showLogin) {
     return (
       <div className="min-h-screen bg-gray-100 p-8">
-        {/* 토스트 알림 */}
         {toast && <Toast message={toast.message} type={toast.type} onClose={closeToast} />}
         
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
@@ -367,7 +366,6 @@ export default function Home() {
   if (isLoggedIn && user) {
     return (
       <div className="min-h-screen bg-gray-100">
-        {/* 토스트 알림 */}
         {toast && <Toast message={toast.message} type={toast.type} onClose={closeToast} />}
         
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -612,6 +610,62 @@ export default function Home() {
                         defaultValue={editingSermon.title}
                         required
                         className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200 ${
+                          formErrors.title ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                      />
+                      {formErrors.title && <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        설교자 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        name="preacher"
+                        type="text"
+                        defaultValue={editingSermon.preacher}
+                        required
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200 ${
+                          formErrors.preacher ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                      />
+                      {formErrors.preacher && <p className="text-red-500 text-sm mt-1">{formErrors.preacher}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        설교 날짜 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        name="date"
+                        type="date"
+                        defaultValue={editingSermon.sermon_date}
+                        required
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200 ${
+                          formErrors.date ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                      />
+                      {formErrors.date && <p className="text-red-500 text-sm mt-1">{formErrors.date}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        시리즈명
+                      </label>
+                      <input
+                        name="series"
+                        type="text"
+                        defaultValue={editingSermon.series_name || ''}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      유튜브 URL
+                    </label>
+                    <input
+                      name="youtube"
+                      type="url"
+                      defaultValue={editingSermon.youtube_url || ''}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200 ${
                         formErrors.youtube ? 'border-red-500 bg-red-50' : 'border-gray-300'
                       }`}
                     />
@@ -821,7 +875,6 @@ export default function Home() {
   // 공개 홈페이지
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* 토스트 알림 */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={closeToast} />}
       
       {/* 헤더 */}
@@ -968,7 +1021,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 교회 소식 및 연락처 */}
+      {/* 교회 연락처 */}
       <section className="py-20 bg-blue-600 text-white">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-8">📞 교회 연락처</h2>
@@ -1017,79 +1070,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-
-      {/* CSS 스타일 */}
-      <style jsx>{`
-        @keyframes slide-down {
-          from {
-            transform: translateY(-100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        .animate-slide-down {
-          animation: slide-down 0.3s ease-out;
-        }
-      `}</style>
     </div>
   )
-}${
-                          formErrors.title ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                      />
-                      {formErrors.title && <p className="text-red-500 text-sm mt-1">{formErrors.title}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        설교자 <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        name="preacher"
-                        type="text"
-                        defaultValue={editingSermon.preacher}
-                        required
-                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200 ${
-                          formErrors.preacher ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                      />
-                      {formErrors.preacher && <p className="text-red-500 text-sm mt-1">{formErrors.preacher}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        설교 날짜 <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        name="date"
-                        type="date"
-                        defaultValue={editingSermon.sermon_date}
-                        required
-                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200 ${
-                          formErrors.date ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                      />
-                      {formErrors.date && <p className="text-red-500 text-sm mt-1">{formErrors.date}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        시리즈명
-                      </label>
-                      <input
-                        name="series"
-                        type="text"
-                        defaultValue={editingSermon.series_name || ''}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      유튜브 URL
-                    </label>
-                    <input
-                      name="youtube"
-                      type="url"
-                      defaultValue={editingSermon.youtube_url || ''}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-500 transition-colors duration-200
+}
