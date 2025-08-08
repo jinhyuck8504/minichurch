@@ -1,5 +1,4 @@
-// 공개 홈페이지 (아름다운 버전)
-  const displayChurch = currentChurch || {'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase'
@@ -1014,96 +1013,6 @@ export default function Home() {
           <div className="border-t border-gray-700 pt-8">
             <p className="text-gray-400 text-sm">
               © 2024 {displayChurch.name}. All rights reserved.
-            </p>
-            <p className="text-gray-500 text-xs mt-2">
-              Made with ❤️ for God's Kingdom
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
-  )
-} 대중교통 이용 안내</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-3xl mb-3">🟢</div>
-                <p className="font-semibold mb-2">2호선 강남역</p>
-                <p className="text-blue-100 text-sm">12번 출구 도보 5분</p>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl mb-3">🟡</div>
-                <p className="font-semibold mb-2">분당선 선릉역</p>
-                <p className="text-blue-100 text-sm">1번 출구 도보 8분</p>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl mb-3">🚌</div>
-                <p className="font-semibold mb-2">버스</p>
-                <p className="text-blue-100 text-sm">146, 401, 730번</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 푸터 */}
-      <footer className="bg-gray-800 text-white py-12">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold mb-4">🏛️ {displayChurch.name}</h3>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              {displayChurch.description || '하나님의 사랑으로 하나 되는 공동체'}, {displayChurch.name}입니다. 
-              언제나 여러분을 환영합니다.
-            </p>
-          </div>
-          
-          <div className="border-t border-gray-700 pt-8">
-            <p className="text-gray-400 text-sm">
-              © 2024 {displayChurch.name}. All rights reserved.
-            </p>
-            <p className="text-gray-500 text-xs mt-2">
-              Made with ❤️ for God's Kingdom
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
-  )
-} 대중교통 이용 안내</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-3xl mb-3">🟢</div>
-                <p className="font-semibold mb-2">2호선 강남역</p>
-                <p className="text-blue-100 text-sm">12번 출구 도보 5분</p>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl mb-3">🟡</div>
-                <p className="font-semibold mb-2">분당선 선릉역</p>
-                <p className="text-blue-100 text-sm">1번 출구 도보 8분</p>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl mb-3">🚌</div>
-                <p className="font-semibold mb-2">버스</p>
-                <p className="text-blue-100 text-sm">146, 401, 730번</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 푸터 */}
-      <footer className="bg-gray-800 text-white py-12">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold mb-4">🏛️ 새소망교회</h3>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              하나님의 사랑으로 하나 되는 공동체, 새소망교회입니다. 
-              언제나 여러분을 환영합니다.
-            </p>
-          </div>
-          
-          <div className="border-t border-gray-700 pt-8">
-            <p className="text-gray-400 text-sm">
-              © 2024 새소망교회. All rights reserved.
             </p>
             <p className="text-gray-500 text-xs mt-2">
               Made with ❤️ for God's Kingdom
