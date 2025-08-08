@@ -443,6 +443,13 @@ export default function Home() {
               </div>
               <div className="flex items-center space-x-4">
                 <button
+                  onClick={() => window.open('/church-settings', '_blank')}
+                  className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm flex items-center space-x-2"
+                >
+                  <span>⚙️</span>
+                  <span>교회 설정</span>
+                </button>
+                <button
                   onClick={() => window.open('/create-church', '_blank')}
                   className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm flex items-center space-x-2"
                 >
