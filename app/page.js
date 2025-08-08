@@ -85,31 +85,80 @@ export default function Home() {
 
   const connectToDefaultChurch = async (userId) => {
     try {
-      // 기본 교회(새소망교회) 찾기
-      const { data: defaultChurch, error: churchError } = await supabase
-        .from('churches')
-        .select('*')
-        .eq('slug', 'newsope-church')
-        .single()
+      // 기존 설교가 있는 교회들 찾기
+      const { data: existingSermons, error: sermonError } = await supabase
+        .from('sermons')
+        .select(`
+          church_id,
+          churches (
+            id,
+            name,
+            slug,
+            description,
+            logo_url,
+            theme_color,
+            contact_info,
+            address,
+            service_times
+          )
+        `)
+        .limit(1)
 
-      if (churchError || !defaultChurch) {
-        console.error('기본 교회를 찾을 수 없습니다:', churchError)
-        await loadPublicSermons()
+      if (sermonError) {
+        console.error('설교 조회 오류:', sermonError)
         return
       }
 
-      // 사용자를 기본 교회에 admin으로 연결
+      let targetChurch = null
+
+      if (existingSermons && existingSermons.length > 0 && existingSermons[0].churches) {
+        // 기존 설교가 있는 교회 사용
+        targetChurch = existingSermons[0].churches
+      } else {
+        // 새 교회 생성
+        const { data: newChurch, error: createError } = await supabase
+          .from('churches')
+          .insert([{
+            name: '새소망교회',
+            slug: 'newsope-church-' + Date.now(), // 고유 slug
+            description: '하나님의 사랑으로 하나 되는 공동체',
+            contact_info: { phone: '02-1234-5678', email: 'info@newsope.church' },
+            service_times: { 
+              sunday_1: '오전 9시', 
+              sunday_2: '오전 11시', 
+              wednesday: '저녁 7시', 
+              friday: '저녁 7시 30분' 
+            },
+            address: '서울시 강남구 테헤란로 123',
+            theme_color: '#4A90E2'
+          }])
+          .select()
+          .single()
+
+        if (createError) {
+          console.error('교회 생성 오류:', createError)
+          return
+        }
+
+        targetChurch = newChurch
+      }
+
+      if (!targetChurch) {
+        console.error('사용할 교회가 없습니다')
+        return
+      }
+
+      // 사용자를 교회에 admin으로 연결
       const { error: insertError } = await supabase
         .from('user_churches')
         .insert([{
           user_id: userId,
-          church_id: defaultChurch.id,
+          church_id: targetChurch.id,
           role: 'admin'
         }])
 
       if (insertError) {
         console.error('교회 연결 오류:', insertError)
-        await loadPublicSermons()
         return
       }
 
@@ -141,23 +190,39 @@ export default function Home() {
 
   const loadPublicSermons = async () => {
     try {
-      // 기본 교회의 최신 설교 6개만 공개 표시
-      const { data: defaultChurch } = await supabase
-        .from('churches')
-        .select('id')
-        .eq('slug', 'newsope-church')
-        .single()
-
-      if (defaultChurch) {
-        const { data, error } = await supabase
-          .from('sermons')
-          .select('*')
-          .eq('church_id', defaultChurch.id)
-          .order('sermon_date', { ascending: false })
-          .limit(6)
-        
-        if (error) throw error
-        if (data) setSermons(data)
+      // 모든 설교를 가져오되, 교회 정보도 함께 가져오기
+      const { data, error } = await supabase
+        .from('sermons')
+        .select(`
+          *,
+          churches (
+            id,
+            name,
+            slug,
+            theme_color,
+            description,
+            contact_info,
+            address,
+            service_times
+          )
+        `)
+        .order('sermon_date', { ascending: false })
+        .limit(6)
+      
+      if (error) {
+        console.error('공개 설교 로딩 오류:', error)
+        setSermons([])
+        return
+      }
+      
+      if (data && data.length > 0) {
+        setSermons(data)
+        // 첫 번째 설교의 교회 정보를 사용
+        if (data[0].churches) {
+          setCurrentChurch(data[0].churches)
+        }
+      } else {
+        setSermons([])
       }
     } catch (error) {
       console.error('공개 설교 로딩 오류:', error)
