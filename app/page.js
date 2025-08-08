@@ -1,4 +1,5 @@
-'use client'
+// 공개 홈페이지 (아름다운 버전)
+  const displayChurch = currentChurch || {'use client'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '../lib/supabase'
@@ -14,48 +15,177 @@ export default function Home() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [selectedSermon, setSelectedSermon] = useState(null)
   
+  // 멀티 교회 지원을 위한 새로운 상태들
+  const [currentChurch, setCurrentChurch] = useState(null)
+  const [userChurches, setUserChurches] = useState([])
+  const [loading, setLoading] = useState(true)
+  
   const supabase = createClient()
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setUser(user)
-        setIsLoggedIn(true)
-        loadSermons()
-      }
+    const initializeApp = async () => {
+      setLoading(true)
+      await checkUser()
+      setLoading(false)
     }
-    checkUser()
-    loadPublicSermons()
+    initializeApp()
   }, [])
 
-  const loadSermons = async () => {
-    const { data } = await supabase
-      .from('sermons')
-      .select('*')
-      .order('sermon_date', { ascending: false })
-    if (data) setSermons(data)
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      setUser(user)
+      setIsLoggedIn(true)
+      await loadUserChurches(user.id)
+    } else {
+      // 로그인하지 않은 경우 기본 교회의 공개 설교만 표시
+      await loadPublicSermons()
+    }
+  }
+
+  const loadUserChurches = async (userId) => {
+    try {
+      // 사용자가 속한 교회들 가져오기
+      const { data: churchData, error } = await supabase
+        .from('user_churches')
+        .select(`
+          id,
+          role,
+          church_id,
+          churches (
+            id,
+            name,
+            slug,
+            description,
+            logo_url,
+            theme_color,
+            contact_info,
+            address,
+            service_times
+          )
+        `)
+        .eq('user_id', userId)
+
+      if (error) throw error
+
+      if (churchData && churchData.length > 0) {
+        setUserChurches(churchData)
+        // 첫 번째 교회를 현재 교회로 설정
+        setCurrentChurch(churchData[0].churches)
+        await loadSermons(churchData[0].churches.id)
+      } else {
+        // 사용자가 아직 어떤 교회에도 속하지 않은 경우
+        // 기본 교회를 찾아서 자동으로 연결
+        await connectToDefaultChurch(userId)
+      }
+    } catch (error) {
+      console.error('교회 정보 로딩 오류:', error)
+      await loadPublicSermons()
+    }
+  }
+
+  const connectToDefaultChurch = async (userId) => {
+    try {
+      // 기본 교회(새소망교회) 찾기
+      const { data: defaultChurch, error: churchError } = await supabase
+        .from('churches')
+        .select('*')
+        .eq('slug', 'newsope-church')
+        .single()
+
+      if (churchError || !defaultChurch) {
+        console.error('기본 교회를 찾을 수 없습니다:', churchError)
+        await loadPublicSermons()
+        return
+      }
+
+      // 사용자를 기본 교회에 admin으로 연결
+      const { error: insertError } = await supabase
+        .from('user_churches')
+        .insert([{
+          user_id: userId,
+          church_id: defaultChurch.id,
+          role: 'admin'
+        }])
+
+      if (insertError) {
+        console.error('교회 연결 오류:', insertError)
+        await loadPublicSermons()
+        return
+      }
+
+      // 연결 후 다시 사용자 교회 정보 로딩
+      await loadUserChurches(userId)
+    } catch (error) {
+      console.error('기본 교회 연결 오류:', error)
+      await loadPublicSermons()
+    }
+  }
+
+  const loadSermons = async (churchId) => {
+    if (!churchId) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('sermons')
+        .select('*')
+        .eq('church_id', churchId)
+        .order('sermon_date', { ascending: false })
+      
+      if (error) throw error
+      if (data) setSermons(data)
+    } catch (error) {
+      console.error('설교 로딩 오류:', error)
+      setSermons([])
+    }
   }
 
   const loadPublicSermons = async () => {
-    const { data } = await supabase
-      .from('sermons')
-      .select('*')
-      .order('sermon_date', { ascending: false })
-      .limit(6)
-    if (data) setSermons(data)
+    try {
+      // 기본 교회의 최신 설교 6개만 공개 표시
+      const { data: defaultChurch } = await supabase
+        .from('churches')
+        .select('id')
+        .eq('slug', 'newsope-church')
+        .single()
+
+      if (defaultChurch) {
+        const { data, error } = await supabase
+          .from('sermons')
+          .select('*')
+          .eq('church_id', defaultChurch.id)
+          .order('sermon_date', { ascending: false })
+          .limit(6)
+        
+        if (error) throw error
+        if (data) setSermons(data)
+      }
+    } catch (error) {
+      console.error('공개 설교 로딩 오류:', error)
+      setSermons([])
+    }
   }
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      alert('로그인 실패: ' + error.message)
-    } else {
-      setUser(data.user)
-      setIsLoggedIn(true)
-      setShowLogin(false)
-      loadSermons()
+    setLoading(true)
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      
+      if (error) {
+        alert('로그인 실패: ' + error.message)
+      } else {
+        setUser(data.user)
+        setIsLoggedIn(true)
+        setShowLogin(false)
+        await loadUserChurches(data.user.id)
+      }
+    } catch (error) {
+      console.error('로그인 오류:', error)
+      alert('로그인 중 오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -63,69 +193,97 @@ export default function Home() {
     await supabase.auth.signOut()
     setUser(null)
     setIsLoggedIn(false)
+    setCurrentChurch(null)
+    setUserChurches([])
+    await loadPublicSermons()
   }
 
   const handleAddSermon = async (e) => {
     e.preventDefault()
+    
+    if (!currentChurch) {
+      alert('교회 정보가 없습니다.')
+      return
+    }
+
     const formData = new FormData(e.target)
     
-    const { error } = await supabase
-      .from('sermons')
-      .insert([{
-        title: formData.get('title'),
-        preacher: formData.get('preacher'),
-        sermon_date: formData.get('date'),
-        series_name: formData.get('series') || null,
-        youtube_url: formData.get('youtube') || null,
-        summary: formData.get('summary') || null
-      }])
-    
-    if (error) {
-      alert('오류: ' + error.message)
-    } else {
+    try {
+      const { error } = await supabase
+        .from('sermons')
+        .insert([{
+          church_id: currentChurch.id,
+          title: formData.get('title'),
+          preacher: formData.get('preacher'),
+          sermon_date: formData.get('date'),
+          series_name: formData.get('series') || null,
+          youtube_url: formData.get('youtube') || null,
+          summary: formData.get('summary') || null,
+          scripture_reference: formData.get('scripture') || null
+        }])
+      
+      if (error) throw error
+      
       alert('설교가 추가되었습니다!')
       setShowAddForm(false)
-      loadSermons()
+      await loadSermons(currentChurch.id)
       e.target.reset()
+    } catch (error) {
+      console.error('설교 추가 오류:', error)
+      alert('설교 추가 중 오류가 발생했습니다: ' + error.message)
     }
   }
 
   const handleUpdateSermon = async (e) => {
     e.preventDefault()
+    
+    if (!editingSermon || !currentChurch) return
+
     const formData = new FormData(e.target)
     
-    const { error } = await supabase
-      .from('sermons')
-      .update({
-        title: formData.get('title'),
-        preacher: formData.get('preacher'),
-        sermon_date: formData.get('date'),
-        series_name: formData.get('series') || null,
-        youtube_url: formData.get('youtube') || null,
-        summary: formData.get('summary') || null
-      })
-      .eq('id', editingSermon.id)
-    
-    if (error) {
-      alert('수정 실패: ' + error.message)
-    } else {
+    try {
+      const { error } = await supabase
+        .from('sermons')
+        .update({
+          title: formData.get('title'),
+          preacher: formData.get('preacher'),
+          sermon_date: formData.get('date'),
+          series_name: formData.get('series') || null,
+          youtube_url: formData.get('youtube') || null,
+          summary: formData.get('summary') || null,
+          scripture_reference: formData.get('scripture') || null
+        })
+        .eq('id', editingSermon.id)
+        .eq('church_id', currentChurch.id) // 보안을 위해 church_id도 확인
+      
+      if (error) throw error
+      
       alert('설교가 수정되었습니다!')
       setEditingSermon(null)
-      loadSermons()
+      await loadSermons(currentChurch.id)
+    } catch (error) {
+      console.error('설교 수정 오류:', error)
+      alert('설교 수정 중 오류가 발생했습니다: ' + error.message)
     }
   }
 
   const deleteSermon = async (sermonId) => {
-    const { error } = await supabase
-      .from('sermons')
-      .delete()
-      .eq('id', sermonId)
+    if (!currentChurch) return
     
-    if (error) {
-      alert('삭제 실패: ' + error.message)
-    } else {
+    try {
+      const { error } = await supabase
+        .from('sermons')
+        .delete()
+        .eq('id', sermonId)
+        .eq('church_id', currentChurch.id) // 보안을 위해 church_id도 확인
+      
+      if (error) throw error
+      
       alert('설교가 삭제되었습니다!')
-      loadSermons()
+      await loadSermons(currentChurch.id)
+    } catch (error) {
+      console.error('설교 삭제 오류:', error)
+      alert('설교 삭제 중 오류가 발생했습니다: ' + error.message)
     }
   }
 
@@ -134,6 +292,19 @@ export default function Home() {
     if (!url) return null
     const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/)
     return match ? match[1] : null
+  }
+
+  // 로딩 화면
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🏛️</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">미니처치 로딩중...</h2>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        </div>
+      </div>
+    )
   }
 
   // 로그인 폼
@@ -175,16 +346,42 @@ export default function Home() {
   }
 
   // 관리자 화면
-  if (isLoggedIn && user) {
+  if (isLoggedIn && user && currentChurch) {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-5xl mx-auto">
           {/* 헤더 */}
           <div className="bg-white rounded-lg shadow p-6 mb-6">
             <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-blue-600">🏛️ 미니처치 관리자</h1>
+              <div className="flex items-center space-x-4">
+                <h1 className="text-2xl font-bold" style={{ color: currentChurch.theme_color || '#4A90E2' }}>
+                  🏛️ {currentChurch.name} 관리자
+                </h1>
+                {userChurches.length > 1 && (
+                  <select 
+                    className="px-3 py-1 border rounded-md text-sm"
+                    value={currentChurch.id}
+                    onChange={(e) => {
+                      const selectedChurch = userChurches.find(uc => uc.churches.id === e.target.value)
+                      if (selectedChurch) {
+                        setCurrentChurch(selectedChurch.churches)
+                        loadSermons(selectedChurch.churches.id)
+                      }
+                    }}
+                  >
+                    {userChurches.map((uc) => (
+                      <option key={uc.churches.id} value={uc.churches.id}>
+                        {uc.churches.name} ({uc.role})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
               <div className="flex items-center space-x-4">
                 <span className="text-gray-600">{user.email}</span>
+                <span className="text-sm px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                  {userChurches.find(uc => uc.churches.id === currentChurch.id)?.role || 'member'}
+                </span>
                 <button
                   onClick={handleLogout}
                   className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
@@ -262,6 +459,17 @@ export default function Home() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      성경 구절 (선택)
+                    </label>
+                    <input
+                      name="scripture"
+                      type="text"
+                      placeholder="예: 요한복음 3:16"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -360,6 +568,18 @@ export default function Home() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      성경 구절 (선택)
+                    </label>
+                    <input
+                      name="scripture"
+                      type="text"
+                      defaultValue={editingSermon.scripture_reference || ''}
+                      placeholder="예: 요한복음 3:16"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       유튜브 URL (선택)
                     </label>
                     <input
@@ -428,6 +648,7 @@ export default function Home() {
                         <p className="text-sm text-gray-600 mb-2">
                           👤 {sermon.preacher} · 📅 {sermon.sermon_date}
                           {sermon.series_name && ` · 📚 ${sermon.series_name}`}
+                          {sermon.scripture_reference && ` · 📖 ${sermon.scripture_reference}`}
                         </p>
                         
                         {/* 설교 상세 내용 (펼치기/접기) */}
@@ -515,6 +736,20 @@ export default function Home() {
   }
 
   // 공개 홈페이지 (아름다운 버전)
+  const displayChurch = currentChurch || {
+    name: '새소망교회',
+    theme_color: '#4A90E2',
+    description: '하나님의 사랑으로 하나 되는 공동체',
+    contact_info: { phone: '02-1234-5678', email: 'info@newsope.church' },
+    address: '서울시 강남구 테헤란로 123',
+    service_times: {
+      sunday_1: '오전 9시',
+      sunday_2: '오전 11시', 
+      wednesday: '저녁 7시',
+      friday: '저녁 7시 30분'
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* 헤더 */}
@@ -522,7 +757,9 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <h1 className="text-3xl font-bold text-blue-600">🏛️ 새소망교회</h1>
+              <h1 className="text-3xl font-bold" style={{ color: displayChurch.theme_color }}>
+                🏛️ {displayChurch.name}
+              </h1>
             </div>
             <button
               onClick={() => setShowLogin(true)}
@@ -537,9 +774,11 @@ export default function Home() {
       {/* 교회 소개 섹션 */}
       <section className="py-20 text-center">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-5xl font-bold text-gray-800 mb-6">하나님의 사랑으로 하나 되는 공동체</h2>
+          <h2 className="text-5xl font-bold text-gray-800 mb-6">
+            {displayChurch.description || '하나님의 사랑으로 하나 되는 공동체'}
+          </h2>
           <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
-            새소망교회에 오신 것을 환영합니다. 함께 하나님의 말씀을 나누고 성장하는 교회입니다.
+            {displayChurch.name}에 오신 것을 환영합니다. 함께 하나님의 말씀을 나누고 성장하는 교회입니다.
           </p>
           
           {/* 교회 정보 카드 */}
@@ -547,17 +786,25 @@ export default function Home() {
             <div className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
               <div className="text-4xl mb-4">⛪</div>
               <h3 className="font-bold text-xl mb-3 text-gray-800">주일예배</h3>
-              <p className="text-gray-600">매주 일요일 오전 11시</p>
+              <p className="text-gray-600">
+                {displayChurch.service_times?.sunday_1 && `1부: ${displayChurch.service_times.sunday_1}`}
+                {displayChurch.service_times?.sunday_2 && <><br/>2부: {displayChurch.service_times.sunday_2}</>}
+                {!displayChurch.service_times?.sunday_1 && !displayChurch.service_times?.sunday_2 && '매주 일요일 오전 11시'}
+              </p>
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
               <div className="text-4xl mb-4">🙏</div>
               <h3 className="font-bold text-xl mb-3 text-gray-800">수요예배</h3>
-              <p className="text-gray-600">매주 수요일 저녁 7시</p>
+              <p className="text-gray-600">
+                {displayChurch.service_times?.wednesday || '매주 수요일 저녁 7시'}
+              </p>
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
               <div className="text-4xl mb-4">📍</div>
               <h3 className="font-bold text-xl mb-3 text-gray-800">위치</h3>
-              <p className="text-gray-600">서울시 강남구 테헤란로 123</p>
+              <p className="text-gray-600">
+                {displayChurch.address || '서울시 강남구 테헤란로 123'}
+              </p>
             </div>
           </div>
         </div>
@@ -615,22 +862,27 @@ export default function Home() {
                       {sermon.title}
                     </h3>
                     
-                    <div className="flex items-center text-sm text-gray-600 mb-4 space-x-4">
+                    <div className="flex flex-wrap items-center text-sm text-gray-600 mb-4 gap-2">
                       <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
                         👤 {sermon.preacher}
                       </span>
-                      <span className="flex items-center">
+                      <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full">
                         📅 {sermon.sermon_date}
                       </span>
                     </div>
 
-                    {sermon.series_name && (
-                      <div className="mb-4">
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {sermon.series_name && (
                         <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
                           📚 {sermon.series_name}
                         </span>
-                      </div>
-                    )}
+                      )}
+                      {sermon.scripture_reference && (
+                        <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                          📖 {sermon.scripture_reference}
+                        </span>
+                      )}
+                    </div>
 
                     {sermon.summary && (
                       <p className="text-gray-700 text-sm mb-6 leading-relaxed">
@@ -659,8 +911,8 @@ export default function Home() {
       </section>
 
       {/* 연락처 및 찾아오시는 길 섹션 */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-700 text-white">
-        <div className="max-w-6xl mx-auto px-4 text-center">
+      <section className="py-20" style={{ background: `linear-gradient(to right, ${displayChurch.theme_color || '#4A90E2'}, #6366f1)` }}>
+        <div className="max-w-6xl mx-auto px-4 text-center text-white">
           <h2 className="text-4xl font-bold mb-12">📍 찾아오시는 길</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -672,21 +924,21 @@ export default function Home() {
                   <span className="text-2xl">📍</span>
                   <div>
                     <p className="font-semibold">주소</p>
-                    <p className="text-blue-100">서울시 강남구 테헤란로 123</p>
+                    <p className="text-blue-100">{displayChurch.address || '서울시 강남구 테헤란로 123'}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">📞</span>
                   <div>
                     <p className="font-semibold">전화번호</p>
-                    <p className="text-blue-100">02-1234-5678</p>
+                    <p className="text-blue-100">{displayChurch.contact_info?.phone || '02-1234-5678'}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">✉️</span>
                   <div>
                     <p className="font-semibold">이메일</p>
-                    <p className="text-blue-100">info@newsope.church</p>
+                    <p className="text-blue-100">{displayChurch.contact_info?.email || 'info@newsope.church'}</p>
                   </div>
                 </div>
               </div>
@@ -696,22 +948,30 @@ export default function Home() {
             <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-8">
               <h3 className="text-2xl font-bold mb-6">⏰ 예배 시간</h3>
               <div className="space-y-4 text-left">
-                <div className="flex justify-between items-center py-3 border-b border-white border-opacity-20">
-                  <span className="font-semibold">주일 1부 예배</span>
-                  <span className="text-blue-100">오전 9시</span>
-                </div>
-                <div className="flex justify-between items-center py-3 border-b border-white border-opacity-20">
-                  <span className="font-semibold">주일 2부 예배</span>
-                  <span className="text-blue-100">오전 11시</span>
-                </div>
-                <div className="flex justify-between items-center py-3 border-b border-white border-opacity-20">
-                  <span className="font-semibold">수요 예배</span>
-                  <span className="text-blue-100">저녁 7시</span>
-                </div>
-                <div className="flex justify-between items-center py-3">
-                  <span className="font-semibold">금요 기도회</span>
-                  <span className="text-blue-100">저녁 7시 30분</span>
-                </div>
+                {displayChurch.service_times?.sunday_1 && (
+                  <div className="flex justify-between items-center py-3 border-b border-white border-opacity-20">
+                    <span className="font-semibold">주일 1부 예배</span>
+                    <span className="text-blue-100">{displayChurch.service_times.sunday_1}</span>
+                  </div>
+                )}
+                {displayChurch.service_times?.sunday_2 && (
+                  <div className="flex justify-between items-center py-3 border-b border-white border-opacity-20">
+                    <span className="font-semibold">주일 2부 예배</span>
+                    <span className="text-blue-100">{displayChurch.service_times.sunday_2}</span>
+                  </div>
+                )}
+                {displayChurch.service_times?.wednesday && (
+                  <div className="flex justify-between items-center py-3 border-b border-white border-opacity-20">
+                    <span className="font-semibold">수요 예배</span>
+                    <span className="text-blue-100">{displayChurch.service_times.wednesday}</span>
+                  </div>
+                )}
+                {displayChurch.service_times?.friday && (
+                  <div className="flex justify-between items-center py-3">
+                    <span className="font-semibold">금요 기도회</span>
+                    <span className="text-blue-100">{displayChurch.service_times.friday}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -719,6 +979,96 @@ export default function Home() {
           {/* 지하철 안내 */}
           <div className="mt-12 bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-8">
             <h3 className="text-2xl font-bold mb-6">🚇 대중교통 이용 안내</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-3xl mb-3">🟢</div>
+                <p className="font-semibold mb-2">2호선 강남역</p>
+                <p className="text-blue-100 text-sm">12번 출구 도보 5분</p>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl mb-3">🟡</div>
+                <p className="font-semibold mb-2">분당선 선릉역</p>
+                <p className="text-blue-100 text-sm">1번 출구 도보 8분</p>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl mb-3">🚌</div>
+                <p className="font-semibold mb-2">버스</p>
+                <p className="text-blue-100 text-sm">146, 401, 730번</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 푸터 */}
+      <footer className="bg-gray-800 text-white py-12">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <div className="mb-8">
+            <h3 className="text-2xl font-bold mb-4">🏛️ {displayChurch.name}</h3>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              {displayChurch.description || '하나님의 사랑으로 하나 되는 공동체'}, {displayChurch.name}입니다. 
+              언제나 여러분을 환영합니다.
+            </p>
+          </div>
+          
+          <div className="border-t border-gray-700 pt-8">
+            <p className="text-gray-400 text-sm">
+              © 2024 {displayChurch.name}. All rights reserved.
+            </p>
+            <p className="text-gray-500 text-xs mt-2">
+              Made with ❤️ for God's Kingdom
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+} 대중교통 이용 안내</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-3xl mb-3">🟢</div>
+                <p className="font-semibold mb-2">2호선 강남역</p>
+                <p className="text-blue-100 text-sm">12번 출구 도보 5분</p>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl mb-3">🟡</div>
+                <p className="font-semibold mb-2">분당선 선릉역</p>
+                <p className="text-blue-100 text-sm">1번 출구 도보 8분</p>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl mb-3">🚌</div>
+                <p className="font-semibold mb-2">버스</p>
+                <p className="text-blue-100 text-sm">146, 401, 730번</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 푸터 */}
+      <footer className="bg-gray-800 text-white py-12">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <div className="mb-8">
+            <h3 className="text-2xl font-bold mb-4">🏛️ {displayChurch.name}</h3>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              {displayChurch.description || '하나님의 사랑으로 하나 되는 공동체'}, {displayChurch.name}입니다. 
+              언제나 여러분을 환영합니다.
+            </p>
+          </div>
+          
+          <div className="border-t border-gray-700 pt-8">
+            <p className="text-gray-400 text-sm">
+              © 2024 {displayChurch.name}. All rights reserved.
+            </p>
+            <p className="text-gray-500 text-xs mt-2">
+              Made with ❤️ for God's Kingdom
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+} 대중교통 이용 안내</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="text-3xl mb-3">🟢</div>
