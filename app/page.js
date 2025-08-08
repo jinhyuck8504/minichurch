@@ -442,6 +442,13 @@ export default function Home() {
                 )}
               </div>
               <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => window.open('/create-church', '_blank')}
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm flex items-center space-x-2"
+                >
+                  <span>➕</span>
+                  <span>새 교회 만들기</span>
+                </button>
                 <span className="text-gray-600">{user.email}</span>
                 <span className="text-sm px-2 py-1 bg-blue-100 text-blue-800 rounded">
                   {userChurches.find(uc => uc.churches.id === currentChurch.id)?.role || 'member'}
